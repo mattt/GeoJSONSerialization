@@ -25,6 +25,8 @@ for (MKShape *shape in shapes) {
 }
 ```
 
+> After implementing the necessary `MKMapViewDelegate` methods, the resulting map will look [something like this](https://github.com/mattt/GeoJSONSerialization/blob/master/Example/iOS%20Example/map.geojson).
+
 ---
 
 ## Contact

@@ -10,6 +10,8 @@ Pod::Spec.new do |s|
   s.source_files = 'GeoJSONSerialization'
   s.requires_arc = true
 
+  s.frameworks = "MapKit", "CoreLocation"
+
   s.ios.deployment_target = '5.0'
   s.osx.deployment_target = '10.9'
 end

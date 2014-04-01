@@ -26,13 +26,21 @@
 
 NSString * const GeoJSONSerializationErrorDomain = @"com.geojson.serialization.error";
 
+static inline double CLLocationCoordinateNormalizedLatitude(double latitude) {
+    return fmod((latitude + 90.0f), 180.0f) - 90.0f;
+}
+
+static inline double CLLocationCoordinateNormalizedLongitude(double latitude) {
+    return fmod((latitude + 180.0f), 360.0f) - 180.0f;
+}
+
 static inline CLLocationCoordinate2D CLLocationCoordinateFromCoordinates(NSArray *coordinates) {
     NSCParameterAssert(coordinates && [coordinates count] == 2);
 
     NSNumber *longitude = [coordinates firstObject];
     NSNumber *latitude = [coordinates lastObject];
 
-    return CLLocationCoordinate2DMake([latitude doubleValue], [longitude doubleValue]);
+    return CLLocationCoordinate2DMake(CLLocationCoordinateNormalizedLatitude([latitude doubleValue]), CLLocationCoordinateNormalizedLongitude([longitude doubleValue]));
 }
 
 static inline CLLocationCoordinate2D * CLLocationCoordinatesFromCoordinatePairs(NSArray *coordinatePairs) {

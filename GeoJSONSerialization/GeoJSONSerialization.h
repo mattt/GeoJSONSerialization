@@ -47,16 +47,16 @@
 /**
  
  */
-//+ (NSDictionary *)GeoJSONFeatureFromShape:(MKShape *)shape
-//                               properties:(NSDictionary *)properties
-//                                    error:(NSError * __autoreleasing *)error;
++ (NSDictionary *)GeoJSONFeatureFromShape:(MKShape *)shape
+                               properties:(NSDictionary *)properties
+                                    error:(NSError * __autoreleasing *)error;
 
 /**
 
  */
-//+ (NSDictionary *)GeoJSONFeatureCollectionFromShapes:(NSArray *)shapes
-//                                          properties:(NSArray *)arrayOfProperties
-//                                               error:(NSError * __autoreleasing *)error;
++ (NSDictionary *)GeoJSONFeatureCollectionFromShapes:(NSArray *)shapes
+                                          properties:(NSArray *)arrayOfProperties
+                                               error:(NSError * __autoreleasing *)error;
 
 @end
 

@@ -308,6 +308,8 @@ static NSDictionary * GeoJSONFeatureFromShape(MKShape *shape, NSDictionary *prop
         geometry = GeoJSONLineStringFeatureGeometryFromPolyline((MKPolyline *)shape);
     } else if ([shape isKindOfClass:[MKPointAnnotation class]]) {
         geometry = GeoJSONPointFeatureGeometryFromPointAnnotation((MKPointAnnotation *)shape);
+    } else {
+        return nil;
     }
 
     NSMutableDictionary *mutableProperties = [NSMutableDictionary dictionaryWithDictionary:properties];
@@ -325,7 +327,10 @@ static NSDictionary * GeoJSONFeatureCollectionFromShapes(NSArray *shapes, NSArra
 
     [shapes enumerateObjectsUsingBlock:^(MKShape *shape, NSUInteger idx, __unused BOOL *stop) {
         NSDictionary *properties = arrayOfProperties[idx];
-        [mutableFeatures addObject:GeoJSONFeatureFromShape(shape, properties)];
+        NSDictionary *feature = GeoJSONFeatureFromShape(shape, properties);
+        if (feature) {
+            [mutableFeatures addObject:feature];
+        }
     }];
 
     return @{

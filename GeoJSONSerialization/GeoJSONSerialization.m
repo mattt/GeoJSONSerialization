@@ -296,7 +296,7 @@ static NSDictionary * GeoJSONPolygonFeatureGeometryFromPolygon(MKPolygon *polygo
 
     return @{
              @"type": @"Polygon",
-             @"geometry": mutableCoordinateSets
+             @"coordinates": mutableCoordinateSets
              };
 }
 

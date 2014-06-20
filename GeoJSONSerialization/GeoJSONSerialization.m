@@ -266,8 +266,9 @@ static NSDictionary * GeoJSONPointFeatureGeometryFromPointAnnotation(MKPointAnno
 static NSDictionary * GeoJSONLineStringFeatureGeometryFromPolyline(MKPolyline *polyline) {
     NSMutableArray *mutableCoordinatePairs = [NSMutableArray arrayWithCapacity:[polyline pointCount]];
     for (NSUInteger idx = 0; idx < [polyline pointCount]; idx++) {
-        MKMapPoint point = polyline.points[idx];
-        [mutableCoordinatePairs addObject:@[@(point.x), @(point.y)]];
+        CLLocationCoordinate2D coordinate;
+        [polyline getCoordinates:&coordinate range:NSMakeRange(idx, 1)];
+        [mutableCoordinatePairs addObject:@[@(coordinate.longitude), @(coordinate.latitude)]];
     }
 
     return @{
@@ -287,8 +288,9 @@ static NSDictionary * GeoJSONPolygonFeatureGeometryFromPolygon(MKPolygon *polygo
     for (MKPolygon *interiorOrExteriorPolygon in mutablePolygons) {
         NSMutableArray *mutableCoordinatePairs = [NSMutableArray arrayWithCapacity:[interiorOrExteriorPolygon pointCount]];
         for (NSUInteger idx = 0; idx < [interiorOrExteriorPolygon pointCount]; idx++) {
-            MKMapPoint point = interiorOrExteriorPolygon.points[idx];
-            [mutableCoordinatePairs addObject:@[@(point.x), @(point.y)]];
+            CLLocationCoordinate2D coordinate;
+            [interiorOrExteriorPolygon getCoordinates:&coordinate range:NSMakeRange(idx, 1)];
+            [mutableCoordinatePairs addObject:@[@(coordinate.longitude), @(coordinate.latitude)]];
         }
 
         [mutableCoordinateSets addObject:mutableCoordinatePairs];

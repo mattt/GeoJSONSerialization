@@ -35,10 +35,10 @@ static inline double CLLocationCoordinateNormalizedLongitude(double latitude) {
 }
 
 static inline CLLocationCoordinate2D CLLocationCoordinateFromCoordinates(NSArray *coordinates) {
-    NSCParameterAssert(coordinates && [coordinates count] == 2);
+    NSCParameterAssert(coordinates && [coordinates count] >= 2);
 
-    NSNumber *longitude = [coordinates firstObject];
-    NSNumber *latitude = [coordinates lastObject];
+    NSNumber *longitude = coordinates[0];
+    NSNumber *latitude = coordinates[1];
 
     return CLLocationCoordinate2DMake(CLLocationCoordinateNormalizedLatitude([latitude doubleValue]), CLLocationCoordinateNormalizedLongitude([longitude doubleValue]));
 }

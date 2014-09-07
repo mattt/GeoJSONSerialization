@@ -43,7 +43,7 @@ static inline CLLocationCoordinate2D CLLocationCoordinateFromCoordinates(NSArray
     return CLLocationCoordinate2DMake(CLLocationCoordinateNormalizedLatitude([latitude doubleValue]), CLLocationCoordinateNormalizedLongitude([longitude doubleValue]));
 }
 
-static inline CLLocationCoordinate2D * CLLocationCoordinatesFromCoordinatePairs(NSArray *coordinatePairs) {
+static inline CLLocationCoordinate2D * CLCreateLocationCoordinatesFromCoordinatePairs(NSArray *coordinatePairs) {
     NSUInteger count = [coordinatePairs count];
     CLLocationCoordinate2D *locationCoordinates = malloc(sizeof(CLLocationCoordinate2D) * count);
     for (NSUInteger idx = 0; idx < count; idx++) {
@@ -75,8 +75,9 @@ static MKPolyline * MKPolylineFromGeoJSONLineStringFeature(NSDictionary *feature
     NSCParameterAssert([geometry[@"type"] isEqualToString:@"LineString"]);
 
     NSArray *coordinatePairs = geometry[@"coordinates"];
-    CLLocationCoordinate2D *polylineCoordinates = CLLocationCoordinatesFromCoordinatePairs(coordinatePairs);
+    CLLocationCoordinate2D *polylineCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
     MKPolyline *polyLine = [MKPolyline polylineWithCoordinates:polylineCoordinates count:[coordinatePairs count]];
+    free(polylineCoordinates);
 
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
     polyLine.title = properties[@"title"];
@@ -94,9 +95,10 @@ static MKPolygon * MKPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
 
     NSMutableArray *mutablePolygons = [NSMutableArray arrayWithCapacity:[coordinateSets count]];
     for (NSArray *coordinatePairs in coordinateSets) {
-        CLLocationCoordinate2D *polygonCoordinates = CLLocationCoordinatesFromCoordinatePairs(coordinatePairs);
+        CLLocationCoordinate2D *polygonCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
         MKPolygon *polygon = [MKPolygon polygonWithCoordinates:polygonCoordinates count:[coordinatePairs count]];
         [mutablePolygons addObject:polygon];
+        free(polygonCoordinates);
     }
 
     MKPolygon *polygon = nil;

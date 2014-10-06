@@ -231,7 +231,11 @@ static NSArray * MKShapesFromGeoJSONFeatureCollection(NSDictionary *featureColle
     for (NSDictionary *feature in featureCollection[@"features"]) {
         id shape = MKShapeFromGeoJSONFeature(feature);
         if (shape) {
-            [mutableShapes addObject:shape];
+            if ([shape isKindOfClass:[NSArray class]]) {
+                [mutableShapes addObjectsFromArray:shape];
+            } else {
+                [mutableShapes addObject:shape];
+            }
         }
     }
     

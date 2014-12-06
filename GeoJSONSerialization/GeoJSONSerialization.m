@@ -54,13 +54,21 @@ static inline CLLocationCoordinate2D * CLCreateLocationCoordinatesFromCoordinate
     return locationCoordinates;
 }
 
+static MKPointAnnotation * MKPointAnnotationFromGeoJSONPointGeometry(NSDictionary *geometry) {
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"Point"]);
+
+    MKPointAnnotation *pointAnnotation = [[MKPointAnnotation alloc] init];
+    pointAnnotation.coordinate = CLLocationCoordinateFromCoordinates(geometry[@"coordinates"]);
+
+    return pointAnnotation;
+}
+
 static MKPointAnnotation * MKPointAnnotationFromGeoJSONPointFeature(NSDictionary *feature) {
     NSDictionary *geometry = feature[@"geometry"];
 
     NSCParameterAssert([geometry[@"type"] isEqualToString:@"Point"]);
 
-    MKPointAnnotation *pointAnnotation = [[MKPointAnnotation alloc] init];
-    pointAnnotation.coordinate = CLLocationCoordinateFromCoordinates(geometry[@"coordinates"]);
+    MKPointAnnotation *pointAnnotation = MKPointAnnotationFromGeoJSONPointGeometry(geometry);
 
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
     pointAnnotation.title = properties[@"title"];
@@ -86,9 +94,7 @@ static MKPolyline * MKPolylineFromGeoJSONLineStringFeature(NSDictionary *feature
     return polyLine;
 }
 
-static MKPolygon * MKPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
-    NSDictionary *geometry = feature[@"geometry"];
-
+static MKPolygon * MKPolygonFromGeoJSONPolygonGeometry(NSDictionary *geometry) {
     NSCParameterAssert([geometry[@"type"] isEqualToString:@"Polygon"]);
 
     NSArray *coordinateSets = geometry[@"coordinates"];
@@ -115,6 +121,16 @@ static MKPolygon * MKPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
         }
             break;
     }
+
+    return polygon;
+}
+
+static MKPolygon * MKPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"Polygon"]);
+
+    MKPolygon *polygon = MKPolygonFromGeoJSONPolygonGeometry(geometry);
 
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
     polygon.title = properties[@"title"];
@@ -201,6 +217,25 @@ static NSArray * MKPolygonsFromGeoJSONMultiPolygonFeature(NSDictionary *feature)
 }
 
 #pragma mark -
+
+static id MKShapeFromGeoJSONGeometry(NSDictionary *geometry) {
+    NSString *type = geometry[@"type"];
+    if ([type isEqualToString:@"Point"]) {
+        return MKPointAnnotationFromGeoJSONPointGeometry(geometry);
+//    } else if ([type isEqualToString:@"LineString"]) {
+//        return MKPolylineFromGeoJSONLineStringFeature(feature);
+    } else if ([type isEqualToString:@"Polygon"]) {
+        return MKPolygonFromGeoJSONPolygonGeometry(geometry);
+//    } else if ([type isEqualToString:@"MultiPoint"]) {
+//        return MKPointAnnotationsFromGeoJSONMultiPointFeature(feature);
+//    } else if ([type isEqualToString:@"MultiLineString"]) {
+//        return MKPolylinesFromGeoJSONMultiLineStringFeature(feature);
+//    } else if ([type isEqualToString:@"MultiPolygon"]) {
+//        return MKPolygonsFromGeoJSONMultiPolygonFeature(feature);
+    }
+
+    return nil;
+}
 
 static id MKShapeFromGeoJSONFeature(NSDictionary *feature) {
     NSCParameterAssert([feature[@"type"] isEqualToString:@"Feature"]);
@@ -351,6 +386,26 @@ static NSDictionary * GeoJSONFeatureCollectionFromShapes(NSArray *shapes, NSArra
 
 
 @implementation GeoJSONSerialization
+
++ (MKShape *)shapeFromGeoJSONGeometry:(NSDictionary *)geometry
+                                error:(NSError * __autoreleasing *)error
+{
+    @try {
+        return MKShapeFromGeoJSONGeometry(geometry);
+    }
+    @catch (NSException *exception) {
+        if (error) {
+            NSDictionary *userInfo = @{
+                                       NSLocalizedDescriptionKey: exception.name,
+                                       NSLocalizedFailureReasonErrorKey: exception.reason
+                                       };
+
+            *error = [NSError errorWithDomain:GeoJSONSerializationErrorDomain code:-1 userInfo:userInfo];
+        }
+
+        return nil;
+    }
+}
 
 + (MKShape *)shapeFromGeoJSONFeature:(NSDictionary *)feature
                                error:(NSError * __autoreleasing *)error

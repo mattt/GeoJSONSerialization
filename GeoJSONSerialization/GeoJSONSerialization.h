@@ -31,6 +31,12 @@
 /// @name Creating MKShape objects from GeoJSON
 
 /**
+
+ */
++ (MKShape *)shapeFromGeoJSONGeometry:(NSDictionary *)geometry
+                                error:(NSError * __autoreleasing *)error;
+
+/**
  
  */
 + (MKShape *)shapeFromGeoJSONFeature:(NSDictionary *)feature

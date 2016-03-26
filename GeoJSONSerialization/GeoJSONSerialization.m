@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 #import "GeoJSONSerialization.h"
-
+#import "JRAnnotation.h"
 #pragma mark - Geometry Primitives
 
 NSString * const GeoJSONSerializationErrorDomain = @"com.geojson.serialization.error";
@@ -69,6 +69,21 @@ static MKPointAnnotation * MKPointAnnotationFromGeoJSONPointFeature(NSDictionary
     return pointAnnotation;
 }
 
+static MGLPointAnnotation * MGLPointAnnotationFromGeoJSONPointFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"Point"]);
+    
+    MGLPointAnnotation *pointAnnotation = [[MGLPointAnnotation alloc]init];
+    pointAnnotation.coordinate = CLLocationCoordinateFromCoordinates(geometry[@"coordinates"]);
+    
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    pointAnnotation.title = properties[@"title"];
+    pointAnnotation.subtitle = properties[@"subtitle"];
+    
+    return pointAnnotation;
+}
+
 static MKPolyline * MKPolylineFromGeoJSONLineStringFeature(NSDictionary *feature) {
     NSDictionary *geometry = feature[@"geometry"];
 
@@ -76,9 +91,28 @@ static MKPolyline * MKPolylineFromGeoJSONLineStringFeature(NSDictionary *feature
 
     NSArray *coordinatePairs = geometry[@"coordinates"];
     CLLocationCoordinate2D *polylineCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
+
     MKPolyline *polyLine = [MKPolyline polylineWithCoordinates:polylineCoordinates count:[coordinatePairs count]];
+
     free(polylineCoordinates);
 
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    polyLine.title = properties[@"title"];
+    polyLine.subtitle = properties[@"subtitle"];
+
+    return polyLine;
+}
+static MGLPolyline * MGLPolylineFromGeoJSONLineStringFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"LineString"]);
+    
+    NSArray *coordinatePairs = geometry[@"coordinates"];
+    CLLocationCoordinate2D *polylineCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
+    
+    MGLPolyline *polyLine =[MGLPolyline polylineWithCoordinates:polylineCoordinates
+                                                          count:[coordinatePairs count]];
+    
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
     polyLine.title = properties[@"title"];
     polyLine.subtitle = properties[@"subtitle"];
@@ -122,6 +156,43 @@ static MKPolygon * MKPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
 
     return polygon;
 }
+static MGLPolygon * MGLPolygonFromGeoJSONPolygonFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"Polygon"]);
+    
+    NSArray *coordinateSets = geometry[@"coordinates"];
+    
+    NSMutableArray *mutablePolygons = [NSMutableArray arrayWithCapacity:[coordinateSets count]];
+    for (NSArray *coordinatePairs in coordinateSets) {
+        CLLocationCoordinate2D *polygonCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
+        MGLPolygon *polygon = [MGLPolygon polygonWithCoordinates:polygonCoordinates count:[coordinatePairs count]];
+
+        [mutablePolygons addObject:polygon];
+        free(polygonCoordinates);
+    }
+    
+    MKPolygon *polygon = nil;
+    switch ([mutablePolygons count]) {
+        case 0:
+            return nil;
+        case 1:
+            polygon = [mutablePolygons firstObject];
+            break;
+        default: {
+            MKPolygon *exteriorPolygon = [mutablePolygons firstObject];
+            NSArray *interiorPolygons = [mutablePolygons subarrayWithRange:NSMakeRange(1, [mutablePolygons count] - 1)];
+            polygon = [MKPolygon polygonWithPoints:exteriorPolygon.points count:exteriorPolygon.pointCount interiorPolygons:interiorPolygons];
+        }
+            break;
+    }
+    
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    polygon.title = properties[@"title"];
+    polygon.subtitle = properties[@"subtitle"];
+    
+    return polygon;
+}
 
 #pragma mark - Multipart Geometries
 
@@ -150,6 +221,33 @@ static NSArray * MKPointAnnotationsFromGeoJSONMultiPointFeature(NSDictionary *fe
     return [NSArray arrayWithArray:mutablePointAnnotations];
 }
 
+static NSArray * MGLPointAnnotationsFromGeoJSONMultiPointFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"MultiPoint"]);
+    
+    NSArray *coordinatePairs = geometry[@"coordinates"];
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    
+    NSMutableArray *mutablePointAnnotations = [NSMutableArray arrayWithCapacity:[coordinatePairs count]];
+    for (NSArray *coordinates in coordinatePairs) {
+        NSDictionary *subFeature = @{
+                                     @"type": @"Feature",
+                                     @"geometry": @{
+                                             @"type": @"Point",
+                                             @"coordinates": coordinates
+                                             },
+                                     @"properties": properties
+                                     };
+        
+
+//        [mutablePointAnnotations addObject:MKPointAnnotationFromGeoJSONPointFeature(subFeature)];
+        [mutablePointAnnotations addObject:MGLPointAnnotationFromGeoJSONPointFeature(subFeature)];
+    }
+    
+    return [NSArray arrayWithArray:mutablePointAnnotations];
+}
+
 static NSArray * MKPolylinesFromGeoJSONMultiLineStringFeature(NSDictionary *feature) {
     NSDictionary *geometry = feature[@"geometry"];
 
@@ -172,6 +270,31 @@ static NSArray * MKPolylinesFromGeoJSONMultiLineStringFeature(NSDictionary *feat
         [mutablePolylines addObject:MKPolylineFromGeoJSONLineStringFeature(subFeature)];
     }
 
+    return [NSArray arrayWithArray:mutablePolylines];
+}
+static NSArray * MGLPolylinesFromGeoJSONMultiLineStringFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"MultiLineString"]);
+    
+    NSArray *coordinateSets = geometry[@"coordinates"];
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    
+    NSMutableArray *mutablePolylines = [NSMutableArray arrayWithCapacity:[coordinateSets count]];
+    for (NSArray *coordinatePairs in coordinateSets) {
+        NSDictionary *subFeature = @{
+                                     @"type": @"Feature",
+                                     @"geometry": @{
+                                             @"type": @"LineString",
+                                             @"coordinates": coordinatePairs
+                                             },
+                                     @"properties": properties
+                                     };
+        
+        
+        [mutablePolylines addObject:MGLPolylineFromGeoJSONLineStringFeature(subFeature)];
+    }
+    
     return [NSArray arrayWithArray:mutablePolylines];
 }
 
@@ -199,6 +322,30 @@ static NSArray * MKPolygonsFromGeoJSONMultiPolygonFeature(NSDictionary *feature)
 
     return [NSArray arrayWithArray:mutablePolylines];
 }
+static NSArray * MGLPolygonsFromGeoJSONMultiPolygonFeature(NSDictionary *feature) {
+    NSDictionary *geometry = feature[@"geometry"];
+    
+    NSCParameterAssert([geometry[@"type"] isEqualToString:@"MultiPolygon"]);
+    
+    NSArray *coordinateGroups = geometry[@"coordinates"];
+    NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
+    
+    NSMutableArray *mutablePolylines = [NSMutableArray arrayWithCapacity:[coordinateGroups count]];
+    for (NSArray *coordinateSets in coordinateGroups) {
+        NSDictionary *subFeature = @{
+                                     @"type": @"Feature",
+                                     @"geometry": @{
+                                             @"type": @"Polygon",
+                                             @"coordinates": coordinateSets
+                                             },
+                                     @"properties": properties
+                                     };
+        [mutablePolylines addObject:MGLPolygonFromGeoJSONPolygonFeature(subFeature)];
+//        [mutablePolylines addObject:MKPolygonFromGeoJSONPolygonFeature(subFeature)];
+    }
+    
+    return [NSArray arrayWithArray:mutablePolylines];
+}
 
 #pragma mark -
 
@@ -223,6 +370,39 @@ static id MKShapeFromGeoJSONFeature(NSDictionary *feature) {
 
     return nil;
 }
+static id MGLShapeFromGeoJSONFeature(NSDictionary *feature) {
+    NSCParameterAssert([feature[@"type"] isEqualToString:@"Feature"]);
+    
+    NSDictionary *geometry = feature[@"geometry"];
+    NSString *type = geometry[@"type"];
+    if ([type isEqualToString:@"Point"]) {
+        return MGLPointAnnotationFromGeoJSONPointFeature(feature);
+    } else if ([type isEqualToString:@"LineString"]) {
+        return MGLPolylineFromGeoJSONLineStringFeature(feature);
+    } else if ([type isEqualToString:@"Polygon"]) {
+        return MGLPolygonFromGeoJSONPolygonFeature(feature);
+    } else if ([type isEqualToString:@"MultiPoint"]) {
+        return MGLPointAnnotationsFromGeoJSONMultiPointFeature(feature);
+    } else if ([type isEqualToString:@"MultiLineString"]) {
+        return MGLPolylinesFromGeoJSONMultiLineStringFeature(feature);
+    } else if ([type isEqualToString:@"MultiPolygon"]) {
+        return MGLPolygonsFromGeoJSONMultiPolygonFeature(feature);
+    }
+    
+    return nil;
+}
+static id PropertyFromGeoJSONFeature(NSDictionary *feature) {
+    NSCParameterAssert([feature[@"type"] isEqualToString:@"Feature"]);
+    
+    NSDictionary *geometry = feature[@"properties"];
+    if ([geometry isKindOfClass:[NSDictionary class]]) {
+        return geometry;
+    }
+    return nil;
+}
+
+
+
 
 static NSArray * MKShapesFromGeoJSONFeatureCollection(NSDictionary *featureCollection) {
     NSCParameterAssert([featureCollection[@"type"] isEqualToString:@"FeatureCollection"]);
@@ -235,6 +415,50 @@ static NSArray * MKShapesFromGeoJSONFeatureCollection(NSDictionary *featureColle
                 [mutableShapes addObjectsFromArray:shape];
             } else {
                 [mutableShapes addObject:shape];
+            }
+        }
+    }
+    
+    return [NSArray arrayWithArray:mutableShapes];
+}
+static NSArray * MGLShapesFromGeoJSONFeatureCollection(NSDictionary *featureCollection) {
+    NSCParameterAssert([featureCollection[@"type"] isEqualToString:@"FeatureCollection"]);
+    
+    NSMutableArray *mutableShapes = [NSMutableArray array];
+    for (NSDictionary *feature in featureCollection[@"features"]) {
+        id shape = MGLShapeFromGeoJSONFeature(feature);
+        if (shape) {
+            if ([shape isKindOfClass:[NSArray class]]) {
+                [mutableShapes addObjectsFromArray:shape];
+            } else {
+                [mutableShapes addObject:shape];
+            }
+        }
+    }
+    
+    return [NSArray arrayWithArray:mutableShapes];
+}
+static NSArray * JRAnnotationFromGeoJSONFeatureCollection(NSDictionary *featureCollection) {
+    NSCParameterAssert([featureCollection[@"type"] isEqualToString:@"FeatureCollection"]);
+    
+    NSMutableArray *mutableShapes = [NSMutableArray array];
+    for (NSDictionary *feature in featureCollection[@"features"]) {
+        id shape = MKShapeFromGeoJSONFeature(feature);
+        id property = PropertyFromGeoJSONFeature(feature);
+        if (shape) {
+            if ([shape isKindOfClass:[NSArray class]]) {
+//                [mutableShapes addObjectsFromArray:shape];
+                 NSLog(@"%@",@"jajaja");
+            } else {
+                shape =(MKPointAnnotation*)shape;
+                MKPointAnnotation * t = (MKPointAnnotation*)shape;
+                
+//                JRAnnotation *annotation = [[JRAnnotation alloc] initLocation:t.coordinate
+//                                                                        title:@"test"
+//                                                                     subtitle:@"test"];
+                JRAnnotation * annotation = [[JRAnnotation alloc] initLocation:t.coordinate
+                                                                          info:property];
+                [mutableShapes addObject:annotation];
             }
         }
     }
@@ -391,6 +615,45 @@ static NSDictionary * GeoJSONFeatureCollectionFromShapes(NSArray *shapes, NSArra
         return nil;
     }
 }
++ (NSArray *)MGLshapesFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
+                                          error:(NSError * __autoreleasing *)error
+{
+    @try {
+        return MGLShapesFromGeoJSONFeatureCollection(featureCollection);
+    }
+    @catch (NSException *exception) {
+        if (error) {
+            NSDictionary *userInfo = @{
+                                       NSLocalizedDescriptionKey: exception.name,
+                                       NSLocalizedFailureReasonErrorKey: exception.reason
+                                       };
+            
+            *error = [NSError errorWithDomain:GeoJSONSerializationErrorDomain code:-1 userInfo:userInfo];
+        }
+        
+        return nil;
+    }
+}
++ (NSArray *)JRAnnotationFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
+                                          error:(NSError * __autoreleasing *)error
+{
+    @try {
+        return JRAnnotationFromGeoJSONFeatureCollection(featureCollection);
+    }
+    @catch (NSException *exception) {
+        if (error) {
+            NSDictionary *userInfo = @{
+                                       NSLocalizedDescriptionKey: exception.name,
+                                       NSLocalizedFailureReasonErrorKey: exception.reason
+                                       };
+            
+            *error = [NSError errorWithDomain:GeoJSONSerializationErrorDomain code:-1 userInfo:userInfo];
+        }
+        
+        return nil;
+    }
+}
+
 
 #pragma mark -
 

@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 #import "GeoJSONSerialization.h"
-#import "JRAnnotation.h"
+
 #pragma mark - Geometry Primitives
 
 NSString * const GeoJSONSerializationErrorDomain = @"com.geojson.serialization.error";

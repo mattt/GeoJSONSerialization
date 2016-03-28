@@ -438,33 +438,6 @@ static NSArray * MGLShapesFromGeoJSONFeatureCollection(NSDictionary *featureColl
     
     return [NSArray arrayWithArray:mutableShapes];
 }
-static NSArray * JRAnnotationFromGeoJSONFeatureCollection(NSDictionary *featureCollection) {
-    NSCParameterAssert([featureCollection[@"type"] isEqualToString:@"FeatureCollection"]);
-    
-    NSMutableArray *mutableShapes = [NSMutableArray array];
-    for (NSDictionary *feature in featureCollection[@"features"]) {
-        id shape = MKShapeFromGeoJSONFeature(feature);
-        id property = PropertyFromGeoJSONFeature(feature);
-        if (shape) {
-            if ([shape isKindOfClass:[NSArray class]]) {
-//                [mutableShapes addObjectsFromArray:shape];
-                 NSLog(@"%@",@"jajaja");
-            } else {
-                shape =(MKPointAnnotation*)shape;
-                MKPointAnnotation * t = (MKPointAnnotation*)shape;
-                
-//                JRAnnotation *annotation = [[JRAnnotation alloc] initLocation:t.coordinate
-//                                                                        title:@"test"
-//                                                                     subtitle:@"test"];
-                JRAnnotation * annotation = [[JRAnnotation alloc] initLocation:t.coordinate
-                                                                          info:property];
-                [mutableShapes addObject:annotation];
-            }
-        }
-    }
-    
-    return [NSArray arrayWithArray:mutableShapes];
-}
 
 #pragma mark -
 
@@ -615,30 +588,11 @@ static NSDictionary * GeoJSONFeatureCollectionFromShapes(NSArray *shapes, NSArra
         return nil;
     }
 }
-+ (NSArray *)MGLshapesFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
++ (NSArray *)MGshapesFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
                                           error:(NSError * __autoreleasing *)error
 {
     @try {
         return MGLShapesFromGeoJSONFeatureCollection(featureCollection);
-    }
-    @catch (NSException *exception) {
-        if (error) {
-            NSDictionary *userInfo = @{
-                                       NSLocalizedDescriptionKey: exception.name,
-                                       NSLocalizedFailureReasonErrorKey: exception.reason
-                                       };
-            
-            *error = [NSError errorWithDomain:GeoJSONSerializationErrorDomain code:-1 userInfo:userInfo];
-        }
-        
-        return nil;
-    }
-}
-+ (NSArray *)JRAnnotationFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
-                                          error:(NSError * __autoreleasing *)error
-{
-    @try {
-        return JRAnnotationFromGeoJSONFeatureCollection(featureCollection);
     }
     @catch (NSException *exception) {
         if (error) {

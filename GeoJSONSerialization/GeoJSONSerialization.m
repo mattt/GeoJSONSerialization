@@ -202,9 +202,11 @@ static NSArray * MKPolygonsFromGeoJSONMultiPolygonFeature(NSDictionary *feature)
 
 #pragma mark -
 
-static id MKShapeFromGeoJSONFeature(NSDictionary *feature) {
+static id MKShapeFromGeoJSONFeature(NSDictionary *feature, BOOL *flatten) {
     NSCParameterAssert([feature[@"type"] isEqualToString:@"Feature"]);
 
+    if (flatten) *flatten = YES;
+  
     NSDictionary *geometry = feature[@"geometry"];
     NSString *type = geometry[@"type"];
     if ([type isEqualToString:@"Point"]) {
@@ -216,6 +218,7 @@ static id MKShapeFromGeoJSONFeature(NSDictionary *feature) {
     } else if ([type isEqualToString:@"MultiPoint"]) {
         return MKPointAnnotationsFromGeoJSONMultiPointFeature(feature);
     } else if ([type isEqualToString:@"MultiLineString"]) {
+        if (flatten) *flatten = NO;
         return MKPolylinesFromGeoJSONMultiLineStringFeature(feature);
     } else if ([type isEqualToString:@"MultiPolygon"]) {
         return MKPolygonsFromGeoJSONMultiPolygonFeature(feature);
@@ -229,9 +232,10 @@ static NSArray * MKShapesFromGeoJSONFeatureCollection(NSDictionary *featureColle
 
     NSMutableArray *mutableShapes = [NSMutableArray array];
     for (NSDictionary *feature in featureCollection[@"features"]) {
-        id shape = MKShapeFromGeoJSONFeature(feature);
+        BOOL flatten = YES;
+        id shape = MKShapeFromGeoJSONFeature(feature, &flatten);
         if (shape) {
-            if ([shape isKindOfClass:[NSArray class]]) {
+            if ([shape isKindOfClass:[NSArray class]] && flatten) {
                 [mutableShapes addObjectsFromArray:shape];
             } else {
                 [mutableShapes addObject:shape];
@@ -356,7 +360,7 @@ static NSDictionary * GeoJSONFeatureCollectionFromShapes(NSArray *shapes, NSArra
                                error:(NSError * __autoreleasing *)error
 {
     @try {
-        return MKShapeFromGeoJSONFeature(feature);
+        return MKShapeFromGeoJSONFeature(feature, nil);
     }
     @catch (NSException *exception) {
         if (error) {

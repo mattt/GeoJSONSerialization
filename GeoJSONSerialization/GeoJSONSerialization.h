@@ -23,6 +23,8 @@
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>
 
+#define kInvalidAltitude DBL_MAX
+
 /**
  
  */

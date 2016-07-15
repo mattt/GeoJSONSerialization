@@ -21,6 +21,8 @@
 // THE SOFTWARE.
 
 #import "GeoJSONSerialization.h"
+#import "MKPointAnnotation+altitude.h"
+#import "MKPolyline+Altitudes.h"
 
 #pragma mark - Geometry Primitives
 
@@ -43,6 +45,18 @@ static inline CLLocationCoordinate2D CLLocationCoordinateFromCoordinates(NSArray
     return CLLocationCoordinate2DMake(CLLocationCoordinateNormalizedLatitude([latitude doubleValue]), CLLocationCoordinateNormalizedLongitude([longitude doubleValue]));
 }
 
+static inline CLLocationDistance altitudeFromCoordinates(NSArray *coordinates) {
+  NSCParameterAssert(coordinates && [coordinates count] >= 2);
+  
+  CLLocationDistance altitude = kInvalidAltitude;
+  
+  if (coordinates.count > 2) {
+    altitude = [coordinates[2] doubleValue];
+  }
+  
+  return altitude;
+}
+
 static inline CLLocationCoordinate2D * CLCreateLocationCoordinatesFromCoordinatePairs(NSArray *coordinatePairs) {
     NSUInteger count = [coordinatePairs count];
     CLLocationCoordinate2D *locationCoordinates = malloc(sizeof(CLLocationCoordinate2D) * count);
@@ -54,6 +68,17 @@ static inline CLLocationCoordinate2D * CLCreateLocationCoordinatesFromCoordinate
     return locationCoordinates;
 }
 
+static inline CLLocationDistance * CLCreateLocationAltitudesFromCoordinatePairs(NSArray *coordinatePairs) {
+  NSUInteger count = [coordinatePairs count];
+  CLLocationDistance *locationAltitudes = malloc(sizeof(CLLocationDistance) * count);
+  for (NSUInteger idx = 0; idx < count; idx++) {
+    CLLocationDistance altitude = altitudeFromCoordinates(coordinatePairs[idx]);
+    locationAltitudes[idx] = altitude;
+  }
+  
+  return locationAltitudes;
+}
+
 static MKPointAnnotation * MKPointAnnotationFromGeoJSONPointFeature(NSDictionary *feature) {
     NSDictionary *geometry = feature[@"geometry"];
 
@@ -63,8 +88,18 @@ static MKPointAnnotation * MKPointAnnotationFromGeoJSONPointFeature(NSDictionary
     pointAnnotation.coordinate = CLLocationCoordinateFromCoordinates(geometry[@"coordinates"]);
 
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
-    pointAnnotation.title = properties[@"title"];
+    NSNumber *altitude = nil;
+    NSString *ele = properties[@"ele"];
+  
+    if ([ele isKindOfClass:NSString.class]) {
+      if (ele.length > 0) {
+        altitude = [NSNumber numberWithDouble:ele.doubleValue];
+      }
+    }
+  
+    pointAnnotation.title = (properties[@"title"] != nil) ? properties[@"title"] : properties[@"name"];
     pointAnnotation.subtitle = properties[@"subtitle"];
+    pointAnnotation.altitude = altitude;
 
     return pointAnnotation;
 }
@@ -76,8 +111,10 @@ static MKPolyline * MKPolylineFromGeoJSONLineStringFeature(NSDictionary *feature
 
     NSArray *coordinatePairs = geometry[@"coordinates"];
     CLLocationCoordinate2D *polylineCoordinates = CLCreateLocationCoordinatesFromCoordinatePairs(coordinatePairs);
-    MKPolyline *polyLine = [MKPolyline polylineWithCoordinates:polylineCoordinates count:[coordinatePairs count]];
+    CLLocationDistance *polylineAltitudes = CLCreateLocationAltitudesFromCoordinatePairs(coordinatePairs);
+    MKPolyline *polyLine = [MKPolyline polylineWithCoordinates:polylineCoordinates altitudes:polylineAltitudes count:[coordinatePairs count]];
     free(polylineCoordinates);
+    free(polylineAltitudes);
 
     NSDictionary *properties = [NSDictionary dictionaryWithDictionary:feature[@"properties"]];
     polyLine.title = properties[@"title"];

@@ -10,6 +10,18 @@
       <FileRef
          location = "group:GeoJSONSerialization.m">
       </FileRef>
+      <FileRef
+         location = "group:MKPointAnnotation+altitude.h">
+      </FileRef>
+      <FileRef
+         location = "group:MKPointAnnotation+altitude.m">
+      </FileRef>
+      <FileRef
+         location = "group:MKPolyline+Altitudes.h">
+      </FileRef>
+      <FileRef
+         location = "group:MKPolyline+Altitudes.m">
+      </FileRef>
    </Group>
    <FileRef
       location = "group:Example/iOS Example.xcodeproj">

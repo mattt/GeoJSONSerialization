@@ -1,7 +1,9 @@
-GeoJSONSerialization
-====================
+# GeoJSONSerialization
 
-`GeoJSONSerialization` encodes and decodes between [GeoJSON](http://geojson.org) and [MapKit](https://developer.apple.com/library/ios/documentation/MapKit/Reference/MapKit_Framework_Reference/_index.html) shapes, following the API conventions of Foundation's `NSJSONSerialization` class.
+`GeoJSONSerialization` encodes and decodes between
+[GeoJSON](http://geojson.org) and
+[MapKit](https://developer.apple.com/documentation/MapKit) shapes,
+following the API conventions of Foundation's `NSJSONSerialization` class.
 
 ## Usage
 
@@ -25,18 +27,15 @@ for (MKShape *shape in shapes) {
 }
 ```
 
-> After implementing the necessary `MKMapViewDelegate` methods, the resulting map will look [something like this](https://github.com/mattt/GeoJSONSerialization/blob/master/Example/iOS%20Example/map.geojson).
-
----
+> After implementing the necessary `MKMapViewDelegate` methods,
+> the resulting map will look
+> [something like this](https://github.com/mattt/GeoJSONSerialization/blob/master/Example/iOS%20Example/map.geojson).
 
 ## Contact
 
-Mattt Thompson
-
-- http://github.com/mattt
-- http://twitter.com/mattt
-- m@mattt.me
+[Mattt](https://twitter.com/mattt)
 
 ## License
 
-GeoJSONSerialization is available under the MIT license. See the LICENSE file for more info.
+GeoJSONSerialization is available under the MIT license.
+See the LICENSE file for more info.

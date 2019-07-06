@@ -1,5 +1,8 @@
 # GeoJSONSerialization
 
+> This library is no longer maintained.
+> In iOS 13+ and macOS 10.15+, use [`MKGeoJSONDecoder`](https://developer.apple.com/documentation/mapkit/mkgeojsondecoder) instead.
+
 `GeoJSONSerialization` encodes and decodes between
 [GeoJSON](http://geojson.org) and
 [MapKit](https://developer.apple.com/documentation/MapKit) shapes,

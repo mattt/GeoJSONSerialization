@@ -1,6 +1,6 @@
 // GeoJSONSerialization.h
-// 
-// Copyright (c) 2014 Mattt Thompson
+//
+// Copyright (c) 2014 – 2019 Mattt (https://mat.tt/)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,20 +24,20 @@
 #import <MapKit/MapKit.h>
 
 /**
- 
+
  */
 @interface GeoJSONSerialization : NSObject
 
 /// @name Creating MKShape objects from GeoJSON
 
 /**
- 
+
  */
 + (MKShape *)shapeFromGeoJSONFeature:(NSDictionary *)feature
                                error:(NSError * __autoreleasing *)error;
 
 /**
- 
+
  */
 + (NSArray *)shapesFromGeoJSONFeatureCollection:(NSDictionary *)featureCollection
                                           error:(NSError * __autoreleasing *)error;
@@ -45,7 +45,7 @@
 /// @name Creating GeoJSON from MKShape objects
 
 /**
- 
+
  */
 + (NSDictionary *)GeoJSONFeatureFromShape:(MKShape *)shape
                                properties:(NSDictionary *)properties

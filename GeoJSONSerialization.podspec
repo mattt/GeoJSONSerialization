@@ -5,8 +5,8 @@ Pod::Spec.new do |s|
   s.summary  = 'Encodes and decodes between MapKit shapes and GeoJSON.'
   s.homepage = 'https://github.com/mattt/GeoJSONSerialization'
   s.social_media_url = 'https://twitter.com/mattt'
-  s.authors  = { 'Mattt Thompson' => 'm@mattt.me' }
-  s.source   = { :git => 'https://github.com/mattt/GeoJSONSerialization.git', :tag => '0.0.4' }
+  s.authors  = { 'Mattt' => 'mattt@me.com' }
+  s.source   = { :git => 'https://github.com/mattt/GeoJSONSerialization.git', :tag => s.version }
   s.source_files = 'GeoJSONSerialization'
   s.requires_arc = true
 

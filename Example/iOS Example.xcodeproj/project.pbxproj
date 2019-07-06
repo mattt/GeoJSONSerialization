@@ -226,7 +226,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
-				ORGANIZATIONNAME = "Mattt Thompson";
+				ORGANIZATIONNAME = "Mattt";
 				TargetAttributes = {
 					F8A08C7718E3377E00258B27 = {
 						TestTargetID = F8A08C5C18E3377E00258B27;
